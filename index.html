@@ -293,6 +293,7 @@
         <span class="status-badge">已抽：<strong id="drawnCount">-</strong></span>
         <span class="status-badge">剩餘：<strong id="remainCount">-</strong></span>
       </div>
+      <div class="update-time-badge" id="updateTime">最後更新：--:--:--</div>
     </div>
 
     <!-- 區塊 2：圖片與結果顯示區 -->
@@ -357,6 +358,13 @@
       try {
         await fetchRepoImages();
         updateUIState();
+
+        // 更新畫面上的最後更新時間戳記
+        const now = new Date();
+        const timeString = now.toTimeString().split(' ')[0]; // 格式: HH:MM:SS
+        updateTimeEl.textContent = `最後更新：${timeString}`;
+
+        
         if (allImages.length === 0) {
           placeholderEl.textContent = `在 ${CONFIG.targetFolder} 找不到圖片`;
         } else if (getAvailableImages().length === 0) {
