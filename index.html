@@ -8,6 +8,8 @@
     :root {
       --primary: #4f46e5;
       --primary-hover: #4338ca;
+      --folder-color: #0284c7; /* 資料夾名稱顏色 (亮藍色) */
+      --file-color: #4f46e5;   /* 檔案名稱顏色 (藍紫色) */
       --danger: #ef4444;
       --danger-hover: #dc2626;
       --bg: #f8fafc;
@@ -96,7 +98,6 @@
       padding: 0 20px;
     }
 
-    /* 調整結果顯示區：支援換行與放大字體 */
     .result-label {
       min-height: 56px;
       font-size: 0.95rem;
@@ -106,12 +107,20 @@
       word-break: break-all;
     }
 
+    /* 資料夾與檔名各自獨立樣式與顏色 */
+    .result-folder {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--folder-color);
+      margin-top: 4px;
+      display: inline-block;
+    }
+
     .result-filename {
-      display: block;
       font-size: 1.35rem;
       font-weight: 700;
-      color: var(--primary);
-      margin-top: 4px;
+      color: var(--file-color);
+      display: inline-block;
     }
 
     .controls {
@@ -179,12 +188,11 @@
       <img id="resultImg" alt="抽籤結果">
     </div>
 
-    <!-- 調整後的結果顯示結構 -->
     <div class="result-label" id="resultLabel"></div>
 
     <div class="controls">
       <button id="drawBtn" disabled>抽籤</button>
-      <button id="resetBtn" disabled>Reset 重置</button>
+      <button id="resetBtn" disabled>Reset<br/>重置</button>
     </div>
 
     <div class="error-msg" id="errorMsg"></div>
@@ -195,7 +203,7 @@
     const CONFIG = {
       owner: 'gamania31610',
       repo: 'Dress-Draw',
-      targetFolder: 'images/', // 必須以斜線結尾
+      targetFolder: 'images/', 
       storageKey: 'dress_draw_history_v1',
       allowedExtensions: ['.jpg', '.jpeg', '.png', '.gif', '.webp']
     };
@@ -316,10 +324,25 @@
         resultImgEl.src = imageUrl;
         resultImgEl.style.display = 'block';
 
-        const displayName = selectedPath.replace(CONFIG.targetFolder, '');
+        // 處理路徑切割：分離資料夾與檔名
+        const relativePath = selectedPath.replace(CONFIG.targetFolder, '');
+        const lastSlashIndex = relativePath.lastIndexOf('/');
         
-        // 改為換行顯示，並讓檔名具備較大字體
-        resultLabelEl.innerHTML = `抽出結果：<span class="result-filename">${displayName}</span>`;
+        let folderName = '';
+        let fileName = relativePath;
+        if (lastSlashIndex !== -1) {
+          folderName = relativePath.substring(0, lastSlashIndex);
+          fileName = relativePath.substring(lastSlashIndex + 1);
+        }
+
+        // 組合成獨立樣式的 HTML (資料夾與檔名不同顏色)
+        let htmlContent = `抽出結果：<br>`;
+        if (folderName) {
+          htmlContent += `資料夾：<span class="result-folder">${folderName}</span><br>`;
+        }
+        htmlContent += `檔名：<span class="result-filename">${fileName}</span>`;
+
+        resultLabelEl.innerHTML = htmlContent;
 
         isDrawing = false;
         updateUIState();
