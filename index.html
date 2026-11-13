@@ -24,7 +24,6 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      /* 防止手機長按選取文字或跳出系統選單 */
       -webkit-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
@@ -51,7 +50,6 @@
       justify-items: center;
     }
 
-    /* 區塊 1：標題與狀態列 */
     .section-top {
       width: 100%;
       align-self: start;
@@ -62,18 +60,27 @@
     }
 
     h1 {
-      font-size: 2rem;
+      font-size: 2.5rem;
       font-weight: 700;
       letter-spacing: 1px;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
       color: #ffffff;
     }
 
     .status-bar {
       display: flex;
-      justify-content: center;
-      gap: 10px;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
       width: 100%;
+    }
+
+    .status-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+	  margin-bottom: 15px;
     }
 
     .status-badge {
@@ -91,7 +98,14 @@
       margin-left: 2px;
     }
 
-    /* 區塊 2：圖片與結果顯示區 */
+    .update-time-badge {
+      font-size: 0.75rem;
+      color: var(--muted);
+      background-color: rgba(30, 41, 59, 0.6);
+      padding: 2px 10px;
+      border-radius: 12px;
+    }
+
     .section-middle {
       width: 100%;
       align-self: center;
@@ -134,6 +148,7 @@
       color: var(--muted);
       font-size: 0.9rem;
       padding: 0 12px;
+      text-align: center;
     }
 
     .result-label {
@@ -161,7 +176,6 @@
       color: var(--folder-color);
     }
 
-    /* 區塊 3：按鈕控制區 */
     .section-bottom {
       width: 100%;
       align-self: center;
@@ -183,7 +197,7 @@
       border: none;
       border-radius: 10px;
       padding: 10px 14px;
-      font-size: 0.95rem;
+      font-size: 2rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
@@ -211,7 +225,7 @@
       flex: 1;
       line-height: 1.15;
       padding: 6px 10px;
-      font-size: 0.85rem;
+      font-size: 2rem;
       position: relative;
       overflow: hidden;
     }
@@ -221,7 +235,6 @@
       color: white;
     }
 
-    /* 長按時的進度條視覺特效 */
     .hold-progress {
       position: absolute;
       bottom: 0;
@@ -237,11 +250,9 @@
       font-size: 0.75rem;
       margin-top: 4px;
       display: none;
+      text-align: center;
     }
 
-    /* ========================================== */
-    /* PC 電腦螢幕大畫面自動展開 */
-    /* ========================================== */
     @media (min-width: 768px) {
       body {
         padding: 24px;
@@ -254,11 +265,17 @@
         margin-bottom: 20px;
       }
       .status-bar {
+        gap: 6px;
+      }
+      .status-row {
         gap: 16px;
       }
       .status-badge {
         font-size: 1rem;
         padding: 6px 16px;
+      }
+      .update-time-badge {
+        font-size: 0.85rem;
       }
       .image-box {
         height: 360px;
@@ -287,20 +304,22 @@
   <div class="wrapper">
     <!-- 區塊 1：標題與狀態列 -->
     <div class="section-top">
-      <h1>隨機抽籤</h1>
+      <h1>服裝抽選</h1>
       <div class="status-bar">
-        <span class="status-badge">總數：<strong id="totalCount">-</strong></span>
-        <span class="status-badge">已抽：<strong id="drawnCount">-</strong></span>
-        <span class="status-badge">剩餘：<strong id="remainCount">-</strong></span>
+        <div class="status-row">
+          <span class="status-badge">總數：<strong id="totalCount">-</strong></span>
+          <span class="status-badge">已抽：<strong id="drawnCount">-</strong></span>
+          <span class="status-badge">剩餘：<strong id="remainCount">-</strong></span>
+        </div>
+        <div class="update-time-badge" id="updateTime">最後更新：--:--:--</div>
       </div>
-      <div class="update-time-badge" id="updateTime">最後更新：--:--:--</div>
     </div>
 
     <!-- 區塊 2：圖片與結果顯示區 -->
     <div class="section-middle">
       <div class="image-box">
         <div class="placeholder-text" id="placeholder">正在從 GitHub 載入圖片清單...</div>
-        <img id="resultImg" alt="抽籤結果">
+        <img id="resultImg" alt="抽選結果">
       </div>
       <div class="result-label" id="resultLabel"></div>
     </div>
@@ -308,7 +327,7 @@
     <!-- 區塊 3：按鈕控制區 -->
     <div class="section-bottom">
       <div class="controls">
-        <button id="drawBtn" disabled>抽籤</button>
+        <button id="drawBtn" disabled>抽選</button>
         <button id="resetBtn" disabled>重置
           <div class="hold-progress" id="holdProgress"></div>
         </button>
@@ -330,11 +349,12 @@
     let allImages = [];      
     let drawnHistory = [];   
     let isDrawing = false;
-    let lastActiveTime = Date.now(); // 記錄上次活躍時間
+    let isFetching = false;
 
     const totalCountEl = document.getElementById('totalCount');
     const drawnCountEl = document.getElementById('drawnCount');
     const remainCountEl = document.getElementById('remainCount');
+    const updateTimeEl = document.getElementById('updateTime');
     const placeholderEl = document.getElementById('placeholder');
     const resultImgEl = document.getElementById('resultImg');
     const resultLabelEl = document.getElementById('resultLabel');
@@ -343,7 +363,6 @@
     const holdProgressEl = document.getElementById('holdProgress');
     const errorMsgEl = document.getElementById('errorMsg');
 
-    // 取得 GitHub API 標頭（若有設定 Token 則自動夾帶）
     function getApiHeaders() {
       const token = localStorage.getItem(CONFIG.tokenKey);
       const headers = {};
@@ -354,7 +373,10 @@
     }
 
     async function init() {
+      if (isFetching) return;
+      isFetching = true;
       loadHistory();
+      
       try {
         await fetchRepoImages();
         updateUIState();
@@ -364,17 +386,21 @@
         const timeString = now.toTimeString().split(' ')[0]; // 格式: HH:MM:SS
         updateTimeEl.textContent = `最後更新：${timeString}`;
 
-        
         if (allImages.length === 0) {
           placeholderEl.textContent = `在 ${CONFIG.targetFolder} 找不到圖片`;
         } else if (getAvailableImages().length === 0) {
           placeholderEl.textContent = '所有圖片都抽完了！請長按 Reset 重置。';
         } else {
-          placeholderEl.textContent = '準備就緒，點擊下方按鈕抽籤';
+          // 若之前沒有抽過籤（還在佔位狀態），才顯示準備就緒
+          if (resultImgEl.style.display !== 'block') {
+            placeholderEl.textContent = '準備就緒,點擊下方按鈕抽籤';
+          }
         }
       } catch (err) {
         showError(`載入失敗：${err.message}`);
-        placeholderEl.textContent = '無法載入圖片清單（可能 API 額度已滿，請長按 Reset 設定權杖）';
+        placeholderEl.textContent = '無法載入清單 (可能 API 額度滿，請長按 Reset 設定權杖)';
+      } finally {
+        isFetching = false;
       }
     }
 
@@ -397,8 +423,8 @@
 
       const repoRes = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}?t=${timestamp}`, { headers });
       if (!repoRes.ok) {
-        if (repoRes.status === 403 || repoRes.status === 429) throw new Error('API 請求次數達上限 (請長按 Reset 設定權杖)');
-        if (repoRes.status === 404) throw new Error('找不到 Repo，請確認是否為 Public');
+        if (repoRes.status === 403 || repoRes.status === 429) throw new Error('API 額度已滿 (請長按 Reset 設定權杖)');
+        if (repoRes.status === 404) throw new Error('找不到 Repo');
         throw new Error(`HTTP ${repoRes.status}`);
       }
       const repoData = await repoRes.json();
@@ -437,7 +463,6 @@
       remainCountEl.textContent = available.length;
 
       drawBtn.disabled = available.length === 0 || isDrawing;
-      // 重置按鈕永遠可點擊或長按（即使沒歷史紀錄也能長按設定 Token）
       resetBtn.disabled = isDrawing;
     }
 
@@ -514,12 +539,10 @@
       updateUIState();
     }
 
-    // ==========================================
-    // 長按設定 GitHub Token 邏輯
-    // ==========================================
+    // 長按設定 Token 邏輯
     let holdTimer = null;
     let progressInterval = null;
-    const HOLD_DURATION = 1200; // 長按 1.2 秒觸發
+    const HOLD_DURATION = 1200;
     let startTime = 0;
 
     function startHold(e) {
@@ -527,14 +550,12 @@
       startTime = Date.now();
       holdProgressEl.style.width = '0%';
 
-      // 動畫更新進度條
       progressInterval = setInterval(() => {
         const elapsed = Date.now() - startTime;
         const percent = Math.min((elapsed / HOLD_DURATION) * 100, 100);
         holdProgressEl.style.width = percent + '%';
       }, 30);
 
-      // 時間到觸發設定 Token
       holdTimer = setTimeout(() => {
         cancelHold();
         openTokenPrompt();
@@ -571,17 +592,14 @@
           localStorage.setItem(CONFIG.tokenKey, trimmed);
           alert('GitHub 權杖已成功儲存！');
         }
-        init(); // 重新載入
+        init();
       }
     }
 
-    // 一般短按：執行重置；長按：設定權杖
     resetBtn.addEventListener('click', (e) => {
-      // 若剛才經歷了長按觸發，則不執行短按重置
       handleReset();
     });
 
-    // 支援滑鼠與觸控事件
     resetBtn.addEventListener('mousedown', startHold);
     resetBtn.addEventListener('mouseup', cancelHold);
     resetBtn.addEventListener('mouseleave', cancelHold);
@@ -594,9 +612,7 @@
 
     drawBtn.addEventListener('click', handleDraw);
 
-    // ==========================================
-    // 徹底解法：監聽多種事件，只要切回畫面立刻強制重整
-    // ==========================================
+    // 切換分頁 / 回到 App 時觸發重新整理並更新時間戳記
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         init();
