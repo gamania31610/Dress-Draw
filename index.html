@@ -96,12 +96,22 @@
       padding: 0 20px;
     }
 
+    /* 調整結果顯示區：支援換行與放大字體 */
     .result-label {
-      min-height: 24px;
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--primary);
+      min-height: 56px;
+      font-size: 0.95rem;
+      color: var(--muted);
       margin-bottom: 20px;
+      line-height: 1.5;
+      word-break: break-all;
+    }
+
+    .result-filename {
+      display: block;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-top: 4px;
     }
 
     .controls {
@@ -169,6 +179,7 @@
       <img id="resultImg" alt="抽籤結果">
     </div>
 
+    <!-- 調整後的結果顯示結構 -->
     <div class="result-label" id="resultLabel"></div>
 
     <div class="controls">
@@ -190,8 +201,8 @@
     };
     // ==========================================
 
-    let allImages = [];      // GitHub 上所有的圖片路徑
-    let drawnHistory = [];   // localStorage 中已抽過的圖片路徑
+    let allImages = [];      
+    let drawnHistory = [];   
     let isDrawing = false;
 
     const totalCountEl = document.getElementById('totalCount');
@@ -204,7 +215,6 @@
     const resetBtn = document.getElementById('resetBtn');
     const errorMsgEl = document.getElementById('errorMsg');
 
-    // 初始化
     async function init() {
       loadHistory();
       try {
@@ -223,7 +233,6 @@
       }
     }
 
-    // 讀取 localStorage 紀錄
     function loadHistory() {
       try {
         const saved = localStorage.getItem(CONFIG.storageKey);
@@ -233,14 +242,11 @@
       }
     }
 
-    // 儲存紀錄至 localStorage
     function saveHistory() {
       localStorage.setItem(CONFIG.storageKey, JSON.stringify(drawnHistory));
     }
 
-    // 透過 GitHub API 取得預設分支與完整檔案樹
     async function fetchRepoImages() {
-      // 1. 取得預設分支名稱 (main 或 master)
       const repoRes = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}`);
       if (!repoRes.ok) {
         if (repoRes.status === 403) throw new Error('GitHub API 請求次數達上限，請稍後再試');
@@ -250,14 +256,12 @@
       const repoData = await repoRes.json();
       const defaultBranch = repoData.default_branch;
 
-      // 2. 遞迴取得所有檔案結構
       const treeRes = await fetch(
         `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/git/trees/${defaultBranch}?recursive=1`
       );
       if (!treeRes.ok) throw new Error(`無法讀取目錄結構 (HTTP ${treeRes.status})`);
       const treeData = await treeRes.json();
 
-      // 3. 篩選位於 images/ 底下且符合圖片副檔名的檔案
       allImages = treeData.tree
         .filter(item => {
           if (item.type !== 'blob') return false;
@@ -267,19 +271,16 @@
         })
         .map(item => item.path);
 
-      // 清理紀錄：若 GitHub 上已刪除某些圖片，順便從歷史紀錄移除以保持計數準確
       const validSet = new Set(allImages);
       drawnHistory = drawnHistory.filter(path => validSet.has(path));
       saveHistory();
     }
 
-    // 計算目前還未抽過的圖片池
     function getAvailableImages() {
       const drawnSet = new Set(drawnHistory);
       return allImages.filter(path => !drawnSet.has(path));
     }
 
-    // 更新畫面數字與按鈕狀態
     function updateUIState() {
       const available = getAvailableImages();
       totalCountEl.textContent = allImages.length;
@@ -290,7 +291,6 @@
       resetBtn.disabled = drawnHistory.length === 0 || isDrawing;
     }
 
-    // 執行抽籤
     function handleDraw() {
       const available = getAvailableImages();
       if (available.length === 0 || isDrawing) return;
@@ -299,36 +299,33 @@
       updateUIState();
       errorMsgEl.style.display = 'none';
 
-      // 使用較隨機的索引抽取
       const randomIndex = Math.floor(Math.random() * available.length);
       const selectedPath = available[randomIndex];
 
-      // 組合 GitHub Raw 圖片網址 (處理資料夾或檔名含空白/中文的編碼)
       const encodedPath = selectedPath.split('/').map(encodeURIComponent).join('/');
       const imageUrl = `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/HEAD/${encodedPath}`;
 
-      // 預載圖片確保順暢顯示
       const imgLoader = new Image();
       imgLoader.onload = () => {
-        // 紀錄已抽出並寫入 localStorage
         drawnHistory.push(selectedPath);
         saveHistory();
 
-        // 顯示圖片與路徑資訊 (移除開頭的 images/)
         placeholderEl.style.display = 'none';
         resultImgEl.style.display = 'none';
-        void resultImgEl.offsetWidth; // 觸發重繪讓動畫重新播放
+        void resultImgEl.offsetWidth; 
         resultImgEl.src = imageUrl;
         resultImgEl.style.display = 'block';
 
         const displayName = selectedPath.replace(CONFIG.targetFolder, '');
-        resultLabelEl.textContent = `抽出結果：${displayName}`;
+        
+        // 改為換行顯示，並讓檔名具備較大字體
+        resultLabelEl.innerHTML = `抽出結果：<span class="result-filename">${displayName}</span>`;
 
         isDrawing = false;
         updateUIState();
 
         if (getAvailableImages().length === 0) {
-          resultLabelEl.textContent += '（已全部抽完！）';
+          resultLabelEl.innerHTML += '<br><span style="color: var(--danger); font-size: 1rem;">（已全部抽完！）</span>';
         }
       };
 
@@ -341,7 +338,6 @@
       imgLoader.src = imageUrl;
     }
 
-    // 重置抽籤紀錄
     function handleReset() {
       if (!confirm('確定要清除所有已抽紀錄，重新開始嗎？')) return;
 
@@ -350,7 +346,7 @@
 
       resultImgEl.style.display = 'none';
       resultImgEl.src = '';
-      resultLabelEl.textContent = '';
+      resultLabelEl.innerHTML = '';
       placeholderEl.style.display = 'block';
       placeholderEl.textContent = '紀錄已重置，點擊下方按鈕開始抽籤';
       errorMsgEl.style.display = 'none';
