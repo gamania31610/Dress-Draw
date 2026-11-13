@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>衣服抽籤系統</title>
+  <title>衣服抽選系統</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='dressGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23818cf8'/%3E%3Cstop offset='100%25' stop-color='%236366f1'/%3E%3C/linearGradient%3E%3ClinearGradient id='goldGrad' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' stop-color='%2338bdf8'/%3E%3Cstop offset='100%25' stop-color='%23818cf8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%230f172a'/%3E%3Cg transform='translate(0, 4)'%3E%3Cpath d='M 32 10 C 32 8, 30 7, 29 8 C 28 9, 28 10, 30 11 L 20 18 C 17 20, 18 22, 21 21 L 32 16 L 43 21 C 46 22, 47 20, 44 18 L 34 11 C 36 10, 36 8, 35 8 C 34 7, 32 8, 32 10 Z' fill='%2338bdf8' opacity='0.8'/%3E%3Cpath d='M 23 23 Q 32 26 41 23 L 45 46 Q 48 52 52 54 L 12 54 Q 16 52 19 46 Z' fill='url(%23dressGrad)'/%3E%3Cpath d='M 23.5 24.5 Q 32 27.5 40.5 24.5' fill='none' stroke='url(%23goldGrad)' stroke-width='1.5' stroke-linecap='round'/%3E%3Cpath d='M 32 26 L 27 54 M 32 26 L 37 54' fill='none' stroke='%230f172a' stroke-width='0.8' opacity='0.3'/%3E%3C/g%3E%3Cg fill='%2338bdf8'%3E%3Cpath d='M 12 14 L 13.5 17.5 L 17 19 L 13.5 20.5 L 12 24 L 10.5 20.5 L 7 19 L 10.5 17.5 Z' transform='scale(0.6) translate(4, 2)' opacity='0.9'/%3E%3Cpath d='M 52 38 L 53 40 L 55 41 L 53 42 L 52 44 L 51 42 L 49 41 L 51 40 Z' fill='%23818cf8'/%3E%3C/g%3E%3C/svg%3E">
   <style>
     :root {
@@ -24,6 +24,10 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      /* 防止手機長按選取文字或跳出系統選單 */
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
     }
 
     body {
@@ -147,22 +151,14 @@
       justify-content: center;
     }
 
-    .result-folder,
-    .result-filename {
-      font-size: 1.05rem;
+    .result-folder {
+      font-size: 1.15rem;
       font-weight: 700;
       display: block;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-    }
-
-    .result-folder {
       color: var(--folder-color);
-    }
-
-    .result-filename {
-      color: var(--file-color);
     }
 
     /* 區塊 3：按鈕控制區 */
@@ -216,11 +212,24 @@
       line-height: 1.15;
       padding: 6px 10px;
       font-size: 0.85rem;
+      position: relative;
+      overflow: hidden;
     }
 
     #resetBtn:hover:not(:disabled) {
       background-color: var(--danger);
       color: white;
+    }
+
+    /* 長按時的進度條視覺特效 */
+    .hold-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      background-color: var(--danger);
+      width: 0%;
+      transition: width 0.05s linear;
     }
 
     .error-msg {
@@ -241,8 +250,8 @@
         max-width: 640px;
       }
       h1 {
-        font-size: 1.8rem;
-        margin-bottom: 14px;
+        font-size: 3rem;
+        margin-bottom: 20px;
       }
       .status-bar {
         gap: 16px;
@@ -263,9 +272,8 @@
         max-height: 72px;
         font-size: 1rem;
       }
-      .result-folder,
-      .result-filename {
-        font-size: 1.35rem;
+      .result-folder {
+        font-size: 1.45rem;
       }
       button {
         padding: 14px 24px;
@@ -279,7 +287,7 @@
   <div class="wrapper">
     <!-- 區塊 1：標題與狀態列 -->
     <div class="section-top">
-      <h1>隨機抽選服飾</h1>
+      <h1>隨機抽籤</h1>
       <div class="status-bar">
         <span class="status-badge">總數：<strong id="totalCount">-</strong></span>
         <span class="status-badge">已抽：<strong id="drawnCount">-</strong></span>
@@ -300,7 +308,10 @@
     <div class="section-bottom">
       <div class="controls">
         <button id="drawBtn" disabled>抽籤</button>
-        <button id="resetBtn" disabled>重置</button>
+        <button id="resetBtn" disabled>
+          RESET<br>重置
+          <div class="hold-progress" id="holdProgress"></div>
+        </button>
       </div>
       <div class="error-msg" id="errorMsg"></div>
     </div>
@@ -312,6 +323,7 @@
       repo: 'Dress-Draw',
       targetFolder: 'images/', 
       storageKey: 'dress_draw_history_v1',
+      tokenKey: 'github_pat_token_v1',
       allowedExtensions: ['.jpg', '.jpeg', '.png', '.gif', '.webp']
     };
 
@@ -327,7 +339,18 @@
     const resultLabelEl = document.getElementById('resultLabel');
     const drawBtn = document.getElementById('drawBtn');
     const resetBtn = document.getElementById('resetBtn');
+    const holdProgressEl = document.getElementById('holdProgress');
     const errorMsgEl = document.getElementById('errorMsg');
+
+    // 取得 GitHub API 標頭（若有設定 Token 則自動夾帶）
+    function getApiHeaders() {
+      const token = localStorage.getItem(CONFIG.tokenKey);
+      const headers = {};
+      if (token && token.trim() !== '') {
+        headers['Authorization'] = `Bearer ${token.trim()}`;
+      }
+      return headers;
+    }
 
     async function init() {
       loadHistory();
@@ -337,13 +360,13 @@
         if (allImages.length === 0) {
           placeholderEl.textContent = `在 ${CONFIG.targetFolder} 找不到圖片`;
         } else if (getAvailableImages().length === 0) {
-          placeholderEl.textContent = '所有圖片都抽完了！請點擊 Reset。';
+          placeholderEl.textContent = '所有圖片都抽完了！請長按 Reset 重置。';
         } else {
           placeholderEl.textContent = '準備就緒，點擊下方按鈕抽籤';
         }
       } catch (err) {
         showError(`載入失敗：${err.message}`);
-        placeholderEl.textContent = '無法載入圖片清單';
+        placeholderEl.textContent = '無法載入圖片清單（可能 API 額度已滿，請長按 Reset 設定權杖）';
       }
     }
 
@@ -361,11 +384,12 @@
     }
 
     async function fetchRepoImages() {
-      // 加上 ?t= 時間戳記，強制 GitHub 每次回傳最新清單、不走瀏覽器快取
       const timestamp = Date.now();
-      const repoRes = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}?t=${timestamp}`);
+      const headers = getApiHeaders();
+
+      const repoRes = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}?t=${timestamp}`, { headers });
       if (!repoRes.ok) {
-        if (repoRes.status === 403) throw new Error('API 請求次數達上限');
+        if (repoRes.status === 403 || repoRes.status === 429) throw new Error('API 請求次數達上限 (請長按 Reset 設定權杖)');
         if (repoRes.status === 404) throw new Error('找不到 Repo，請確認是否為 Public');
         throw new Error(`HTTP ${repoRes.status}`);
       }
@@ -373,7 +397,8 @@
       const defaultBranch = repoData.default_branch;
 
       const treeRes = await fetch(
-        `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/git/trees/${defaultBranch}?recursive=1&t=${timestamp}`
+        `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/git/trees/${defaultBranch}?recursive=1&t=${timestamp}`,
+        { headers }
       );
       if (!treeRes.ok) throw new Error(`無法讀取目錄 (HTTP ${treeRes.status})`);
       const treeData = await treeRes.json();
@@ -404,7 +429,8 @@
       remainCountEl.textContent = available.length;
 
       drawBtn.disabled = available.length === 0 || isDrawing;
-      resetBtn.disabled = drawnHistory.length === 0 || isDrawing;
+      // 重置按鈕永遠可點擊或長按（即使沒歷史紀錄也能長按設定 Token）
+      resetBtn.disabled = isDrawing;
     }
 
     function handleDraw() {
@@ -419,7 +445,6 @@
       const selectedPath = available[randomIndex];
 
       const encodedPath = selectedPath.split('/').map(encodeURIComponent).join('/');
-      // 圖片網址也加上時間戳記，確保手機點擊抽籤或看圖片時不會被快取舊圖
       const imageUrl = `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/HEAD/${encodedPath}?t=${Date.now()}`;
 
       const imgLoader = new Image();
@@ -436,25 +461,18 @@
         const relativePath = selectedPath.replace(CONFIG.targetFolder, '');
         const lastSlashIndex = relativePath.lastIndexOf('/');
         
-        let folderName = '';
-        let fileName = relativePath;
+        let folderName = '根目錄';
         if (lastSlashIndex !== -1) {
           folderName = relativePath.substring(0, lastSlashIndex);
-          fileName = relativePath.substring(lastSlashIndex + 1);
         }
 
-        let htmlContent = '';
-        if (folderName) {
-          htmlContent += `<span class="result-folder">箱子：${folderName}</span>`;
-        }
-
-        resultLabelEl.innerHTML = htmlContent;
+        resultLabelEl.innerHTML = `<span class="result-folder">資料夾：${folderName}</span>`;
 
         isDrawing = false;
         updateUIState();
 
         if (getAvailableImages().length === 0) {
-          resultLabelEl.innerHTML += '<span style="color: var(--danger); font-size: 0.75rem;">（已全部抽完！）</span>';
+          resultLabelEl.innerHTML += '<span style="color: var(--danger); font-size: 0.75rem;"><br>（已全部抽完！）</span>';
         }
       };
 
@@ -468,7 +486,12 @@
     }
 
     function handleReset() {
-      if (!confirm('確定要清除紀錄重新開始嗎？')) return;
+      if (drawnHistory.length > 0) {
+        if (!confirm('確定要清除抽籤紀錄重新開始嗎？')) return;
+      } else {
+        alert('目前沒有抽籤紀錄。');
+        return;
+      }
 
       drawnHistory = [];
       saveHistory();
@@ -483,15 +506,87 @@
       updateUIState();
     }
 
-    function showError(msg) {
-      errorMsgEl.textContent = msg;
-      errorMsgEl.style.display = 'block';
+    // ==========================================
+    // 長按設定 GitHub Token 邏輯
+    // ==========================================
+    let holdTimer = null;
+    let progressInterval = null;
+    const HOLD_DURATION = 1200; // 長按 1.2 秒觸發
+    let startTime = 0;
+
+    function startHold(e) {
+      if (isDrawing) return;
+      startTime = Date.now();
+      holdProgressEl.style.width = '0%';
+
+      // 動畫更新進度條
+      progressInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const percent = Math.min((elapsed / HOLD_DURATION) * 100, 100);
+        holdProgressEl.style.width = percent + '%';
+      }, 30);
+
+      // 時間到觸發設定 Token
+      holdTimer = setTimeout(() => {
+        cancelHold();
+        openTokenPrompt();
+      }, HOLD_DURATION);
     }
 
-    drawBtn.addEventListener('click', handleDraw);
-    resetBtn.addEventListener('click', handleReset);
+    function cancelHold() {
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+      }
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+      }
+      holdProgressEl.style.width = '0%';
+    }
 
-    // 支援手機版：當使用者切換去其他 App 或分頁，再「切回」這個網頁分頁時自動重新整理/抓取最新清單
+    function openTokenPrompt() {
+      const currentToken = localStorage.getItem(CONFIG.tokenKey) || '';
+      const input = prompt(
+        '【GitHub API 權杖設定】\n\n' +
+        '輸入 Personal Access Token (PAT) 可將 API 限制從每小時 60 次提升至 5,000 次。\n' +
+        '若要清除權杖，請清空輸入框並按確定。',
+        currentToken
+      );
+
+      if (input !== null) {
+        const trimmed = input.trim();
+        if (trimmed === '') {
+          localStorage.removeItem(CONFIG.tokenKey);
+          alert('已清除 GitHub 權杖。');
+        } else {
+          localStorage.setItem(CONFIG.tokenKey, trimmed);
+          alert('GitHub 權杖已成功儲存！');
+        }
+        init(); // 重新載入
+      }
+    }
+
+    // 一般短按：執行重置；長按：設定權杖
+    resetBtn.addEventListener('click', (e) => {
+      // 若剛才經歷了長按觸發，則不執行短按重置
+      handleReset();
+    });
+
+    // 支援滑鼠與觸控事件
+    resetBtn.addEventListener('mousedown', startHold);
+    resetBtn.addEventListener('mouseup', cancelHold);
+    resetBtn.addEventListener('mouseleave', cancelHold);
+
+    resetBtn.addEventListener('touchstart', (e) => {
+      startHold(e);
+    }, { passive: true });
+    resetBtn.addEventListener('touchend', cancelHold);
+    resetBtn.addEventListener('touchcancel', cancelHold);
+
+    drawBtn.addEventListener('click', handleDraw);
+
+    // 支援手機版切換回分頁自動重新整理抓取
     window.addEventListener('pageshow', (event) => {
       if (event.persisted) {
         init();
