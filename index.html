@@ -586,28 +586,19 @@
 
     drawBtn.addEventListener('click', handleDraw);
 
-    // 支援手機版切換回分頁自動重新整理抓取
-    window.addEventListener('pageshow', (event) => {
-      if (event.persisted) {
-        init();
-      }
+    // ==========================================
+    // 手機切換分頁或回到 App 時，無條件自動重新整理抓取
+    // ==========================================
+    window.addEventListener('pageshow', () => {
+      init();
     });
 
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
-        // 當分頁重新變為顯眼/可見時，檢查離開了多久
-        const now = Date.now();
-        // 如果離開超過 2 秒以上再切回來，就強制向 GitHub 重新抓取最新清單
-        if (now - lastActiveTime > 2000) {
-          init();
-        }
-        lastActiveTime = now;
-      } else {
-        lastActiveTime = Date.now();
+        init();
       }
     });
-    
-    // 額外增加 window focus 事件，完美覆蓋 iOS Safari 切換分頁或回到瀏覽器的瞬間
+
     window.addEventListener('focus', () => {
       init();
     });
