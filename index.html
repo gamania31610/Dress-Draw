@@ -1,494 +1,329 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>隨機抽籤系統</title>
-  <style>
-    :root {
-      --primary: #6366f1;
-      --primary-hover: #4f46e5;
-      --folder-color: #38bdf8;
-      --file-color: #818cf8;
-      --danger: #f87171;
-      --danger-hover: #ef4444;
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --text: #f1f5f9;
-      --muted: #94a3b8;
-      --border: #334155;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      height: 100vh;
-      height: 100dvh;
-      display: flex;
-      justify-content: center;
-      padding: 10px 16px;
-      overflow: hidden; 
-    }
-
-    .wrapper {
-      width: 100%;
-      max-width: 420px;
-      height: 100%;
-      display: grid;
-      grid-template-rows: 1fr auto 1fr;
-      justify-items: center;
-    }
-
-    /* 區塊 1：標題與狀態列 */
-    .section-top {
-      width: 100%;
-      align-self: start;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 4px;
-    }
-
-    h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      letter-spacing: 1px;
-      margin-bottom: 30px;
-      color: #ffffff;
-    }
-
-    .status-bar {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-    }
-
-    .status-badge {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border);
-      padding: 3px 8px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-
-    .status-badge strong {
-      color: var(--text);
-      font-weight: 600;
-      margin-left: 2px;
-    }
-
-    /* 區塊 2：圖片與結果顯示區 */
-    .section-middle {
-      width: 100%;
-      align-self: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 4px;
-    }
-
-    .image-box {
-      width: 100%;
-      height: 190px;
-      background-color: var(--card-bg);
-      border: 2px dashed var(--border);
-      border-radius: 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      position: relative;
-      margin-bottom: 6px;
-    }
-
-    .image-box img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      display: none;
-      animation: fadeIn 0.3s ease-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.96); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
-    .placeholder-text {
-      color: var(--muted);
-      font-size: 0.9rem;
-      padding: 0 12px;
-    }
-
-    .result-label {
-      min-height: 54px; 
-      max-height: 54px;
-      overflow: hidden;
-      font-size: 0.8rem;
-      color: var(--muted);
-      line-height: 1.3;
-      word-break: break-all;
-      width: 100%;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .result-folder,
-    .result-filename {
-      font-size: 1.05rem;
-      font-weight: 700;
-      display: block;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .result-folder {
-      color: var(--folder-color);
-    }
-
-    .result-filename {
-      color: var(--file-color);
-    }
-
-    /* 區塊 3：按鈕控制區 */
-    .section-bottom {
-      width: 100%;
-      align-self: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 4px;
-    }
-
-    .controls {
-      width: 100%;
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-    }
-
-    button {
-      border: none;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    #drawBtn {
-      background-color: var(--primary);
-      color: white;
-      flex: 2;
-    }
-
-    #drawBtn:hover:not(:disabled) {
-      background-color: var(--primary-hover);
-    }
-
-    #resetBtn {
-      background-color: var(--card-bg);
-      color: var(--danger);
-      border: 1px solid var(--border);
-      flex: 1;
-      line-height: 1.15;
-      padding: 6px 10px;
-      font-size: 0.85rem;
-    }
-
-    #resetBtn:hover:not(:disabled) {
-      background-color: var(--danger);
-      color: white;
-    }
-
-    .error-msg {
-      color: var(--danger);
-      font-size: 0.75rem;
-      margin-top: 4px;
-      display: none;
-    }
-
-    /* ========================================== */
-    /* PC 電腦螢幕大畫面自動展開 */
-    /* ========================================== */
-    @media (min-width: 768px) {
-      body {
-        padding: 24px;
-      }
-      .wrapper {
-        max-width: 640px;
-      }
-      h1 {
-        font-size: 3rem;
-        margin-bottom: 30px;
-      }
-      .status-bar {
-        gap: 16px;
-      }
-      .status-badge {
-        font-size: 1rem;
-        padding: 6px 16px;
-      }
-      .image-box {
-        height: 360px;
-        margin-bottom: 12px;
-      }
-      .placeholder-text {
-        font-size: 1.1rem;
-      }
-      .result-label {
-        min-height: 72px;
-        max-height: 72px;
-        font-size: 1rem;
-      }
-      .result-folder,
-      .result-filename {
-        font-size: 1.35rem;
-      }
-      button {
-        padding: 14px 24px;
-        font-size: 1.1rem;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>不重複隨機抽籤器</title>
+    <!-- 內嵌 SVG 隨機抽籤/骰子 Favicon -->
+	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230f172a%22/><circle cx=%2230%22 cy=%2230%22 r=%2210%22 fill=%22%2322d3ee%22/><circle cx=%2270%22 cy=%2230%22 r=%2210%22 fill=%22%2322d3ee%22/><circle cx=%2250%22 cy=%2250%22 r=%2210%22 fill=%22%23818cf8%22/><circle cx=%2230%22 cy=%2270%22 r=%2210%22 fill=%22%2322d3ee%22/><circle cx=%2270%22 cy=%2270%22 r=%2210%22 fill=%22%2322d3ee%22/></svg>">    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#090d16',
+                        cardBg: '#111827',
+                        cardBorder: '#1f2937',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
+<body class="bg-darkBg text-slate-100 min-h-screen flex flex-col items-center justify-start p-3 sm:p-6 select-none font-sans antialiased">
 
-  <div class="wrapper">
-    <!-- 區塊 1：標題與狀態列 -->
-    <div class="section-top">
-      <h1>隨機抽籤</h1>
-      <div class="status-bar">
-        <span class="status-badge">總數：<strong id="totalCount">-</strong></span>
-        <span class="status-badge">已抽：<strong id="drawnCount">-</strong></span>
-        <span class="status-badge">剩餘：<strong id="remainCount">-</strong></span>
-      </div>
-    </div>
-
-    <!-- 區塊 2：圖片與結果顯示區 -->
-    <div class="section-middle">
-      <div class="image-box">
-        <div class="placeholder-text" id="placeholder">正在從 GitHub 載入圖片清單...</div>
-        <img id="resultImg" alt="抽籤結果">
-      </div>
-      <div class="result-label" id="resultLabel"></div>
-    </div>
-
-    <!-- 區塊 3：按鈕控制區 -->
-    <div class="section-bottom">
-      <div class="controls">
-        <button id="drawBtn" disabled>抽籤</button>
-        <button id="resetBtn" disabled>RESET<br>重置</button>
-      </div>
-      <div class="error-msg" id="errorMsg"></div>
-    </div>
-  </div>
-
-  <script>
-    const CONFIG = {
-      owner: 'gamania31610',
-      repo: 'Dress-Draw',
-      targetFolder: 'images/', 
-      storageKey: 'dress_draw_history_v1',
-      allowedExtensions: ['.jpg', '.jpeg', '.png', '.gif', '.webp']
-    };
-
-    let allImages = [];      
-    let drawnHistory = [];   
-    let isDrawing = false;
-
-    const totalCountEl = document.getElementById('totalCount');
-    const drawnCountEl = document.getElementById('drawnCount');
-    const remainCountEl = document.getElementById('remainCount');
-    const placeholderEl = document.getElementById('placeholder');
-    const resultImgEl = document.getElementById('resultImg');
-    const resultLabelEl = document.getElementById('resultLabel');
-    const drawBtn = document.getElementById('drawBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const errorMsgEl = document.getElementById('errorMsg');
-
-    async function init() {
-      loadHistory();
-      try {
-        await fetchRepoImages();
-        updateUIState();
-        if (allImages.length === 0) {
-          placeholderEl.textContent = `在 ${CONFIG.targetFolder} 找不到圖片`;
-        } else if (getAvailableImages().length === 0) {
-          placeholderEl.textContent = '所有圖片都抽完了！請點擊 Reset。';
-        } else {
-          placeholderEl.textContent = '準備就緒，點擊下方按鈕抽籤';
-        }
-      } catch (err) {
-        showError(`載入失敗：${err.message}`);
-        placeholderEl.textContent = '無法載入圖片清單';
-      }
-    }
-
-    function loadHistory() {
-      try {
-        const saved = localStorage.getItem(CONFIG.storageKey);
-        drawnHistory = saved ? JSON.parse(saved) : [];
-      } catch (e) {
-        drawnHistory = [];
-      }
-    }
-
-    function saveHistory() {
-      localStorage.setItem(CONFIG.storageKey, JSON.stringify(drawnHistory));
-    }
-
-    async function fetchRepoImages() {
-      const repoRes = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}`);
-      if (!repoRes.ok) {
-        if (repoRes.status === 403) throw new Error('API 請求次數達上限');
-        if (repoRes.status === 404) throw new Error('找不到 Repo，請確認是否為 Public');
-        throw new Error(`HTTP ${repoRes.status}`);
-      }
-      const repoData = await repoRes.json();
-      const defaultBranch = repoData.default_branch;
-
-      const treeRes = await fetch(
-        `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/git/trees/${defaultBranch}?recursive=1`
-      );
-      if (!treeRes.ok) throw new Error(`無法讀取目錄 (HTTP ${treeRes.status})`);
-      const treeData = await treeRes.json();
-
-      allImages = treeData.tree
-        .filter(item => {
-          if (item.type !== 'blob') return false;
-          if (!item.path.startsWith(CONFIG.targetFolder)) return false;
-          const lowerPath = item.path.toLowerCase();
-          return CONFIG.allowedExtensions.some(ext => lowerPath.endsWith(ext));
-        })
-        .map(item => item.path);
-
-      const validSet = new Set(allImages);
-      drawnHistory = drawnHistory.filter(path => validSet.has(path));
-      saveHistory();
-    }
-
-    function getAvailableImages() {
-      const drawnSet = new Set(drawnHistory);
-      return allImages.filter(path => !drawnSet.has(path));
-    }
-
-    function updateUIState() {
-      const available = getAvailableImages();
-      totalCountEl.textContent = allImages.length;
-      drawnCountEl.textContent = drawnHistory.length;
-      remainCountEl.textContent = available.length;
-
-      drawBtn.disabled = available.length === 0 || isDrawing;
-      resetBtn.disabled = drawnHistory.length === 0 || isDrawing;
-    }
-
-    function handleDraw() {
-      const available = getAvailableImages();
-      if (available.length === 0 || isDrawing) return;
-
-      isDrawing = true;
-      updateUIState();
-      errorMsgEl.style.display = 'none';
-
-      const randomIndex = Math.floor(Math.random() * available.length);
-      const selectedPath = available[randomIndex];
-
-      const encodedPath = selectedPath.split('/').map(encodeURIComponent).join('/');
-      const imageUrl = `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/HEAD/${encodedPath}`;
-
-      const imgLoader = new Image();
-      imgLoader.onload = () => {
-        drawnHistory.push(selectedPath);
-        saveHistory();
-
-        placeholderEl.style.display = 'none';
-        resultImgEl.style.display = 'none';
-        void resultImgEl.offsetWidth; 
-        resultImgEl.src = imageUrl;
-        resultImgEl.style.display = 'block';
-
-        const relativePath = selectedPath.replace(CONFIG.targetFolder, '');
-        const lastSlashIndex = relativePath.lastIndexOf('/');
+    <!-- 主容器 -->
+    <div class="w-full max-w-md bg-cardBg border border-cardBorder rounded-2xl p-4 sm:p-6 shadow-2xl flex flex-col gap-4">
         
-        let folderName = '';
-        let fileName = relativePath;
-        if (lastSlashIndex !== -1) {
-          folderName = relativePath.substring(0, lastSlashIndex);
-          fileName = relativePath.substring(lastSlashIndex + 1);
+        <!-- 頁首標題列 (極簡化設計，方便手機首屏完整顯示) -->
+        <header class="flex flex-col gap-1 border-b border-slate-800 pb-3">
+            <div class="flex items-center justify-between">
+                <h1 class="text-xl sm:text-2xl font-black tracking-wider bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                    不重複隨機抽籤器
+                </h1>
+                <span class="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-400 border border-cyan-800/50">
+                    跨區間不重複
+                </span>
+            </div>
+        </header>
+
+        <!-- 區間設定區 (手機並排顯示節省高度) -->
+        <div class="grid grid-cols-2 gap-3">
+            <!-- 起始數字 -->
+            <div class="flex flex-col gap-1">
+                <label for="startInput" class="text-xs font-bold text-slate-400 tracking-wide">起始數字 (Start)</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-400 font-bold">🏁</span>
+                    <input type="number" id="startInput" value="1" 
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 pl-9 pr-3 text-lg font-bold text-slate-100 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all text-center">
+                </div>
+            </div>
+
+            <!-- 結束數字 -->
+            <div class="flex flex-col gap-1">
+                <label for="endInput" class="text-xs font-bold text-slate-400 tracking-wide">結束數字 (End)</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-400 font-bold">🎯</span>
+                    <input type="number" id="endInput" value="50" 
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 pl-9 pr-3 text-lg font-bold text-slate-100 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all text-center">
+                </div>
+            </div>
+        </div>
+
+        <!-- 狀態數據面板 -->
+        <div class="grid grid-cols-3 gap-2 bg-slate-900/70 border border-slate-800/80 rounded-xl p-2.5 text-center">
+            <div>
+                <div class="text-[11px] text-slate-400 font-medium">總數</div>
+                <div id="statTotal" class="text-base sm:text-lg font-bold text-slate-200">50</div>
+            </div>
+            <div class="border-x border-slate-800">
+                <div class="text-[11px] text-cyan-400 font-medium">區間剩餘</div>
+                <div id="statRemaining" class="text-base sm:text-lg font-bold text-cyan-400">50</div>
+            </div>
+            <div>
+                <div class="text-[11px] text-indigo-400 font-medium">歷史已抽</div>
+                <div id="statHistoryCount" class="text-base sm:text-lg font-bold text-indigo-400">0</div>
+            </div>
+        </div>
+
+        <!-- 區間提示訊息 -->
+        <div id="rangeStatusMsg" class="text-center text-xs font-medium py-1 px-3 rounded-lg bg-emerald-950/40 text-emerald-400 border border-emerald-900/50 flex items-center justify-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="rangeStatusText">區間內尚有 50 個號碼可抽</span>
+        </div>
+
+        <!-- 抽獎主舞台 (數字顯示卡片) -->
+        <div class="relative bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col items-center justify-center shadow-inner min-h-[120px]">
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">抽出號碼</span>
+            <div id="resultDisplay" class="text-5xl sm:text-6xl font-black text-cyan-300 tracking-wider drop-shadow-[0_0_15px_rgba(34,211,238,0.3)]">
+                ?
+            </div>
+            <div id="subResultInfo" class="text-[11px] text-slate-400 mt-1 h-4">點擊下方按鈕開始抽籤</div>
+        </div>
+
+        <!-- 操作按鈕區 -->
+        <div class="flex flex-col gap-2.5">
+            <button id="drawBtn" class="w-full bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 active:scale-[0.99] text-slate-950 font-black py-3 px-4 rounded-xl shadow-lg shadow-cyan-500/20 transition-all text-base flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                </svg>
+                立即抽籤
+            </button>
+            <button id="resetBtn" class="w-full bg-slate-900 hover:bg-slate-800 active:scale-[0.99] border border-slate-700/80 text-slate-400 hover:text-slate-200 font-semibold py-2 px-4 rounded-xl transition-all text-xs flex items-center justify-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Reset / 重置紀錄
+            </button>
+        </div>
+
+        <!-- 已抽號碼歷史紀錄區 -->
+        <div class="border-t border-slate-800 pt-3 flex flex-col gap-2">
+            <div class="flex items-center justify-between text-xs font-bold text-slate-400">
+                <span class="flex items-center gap-1">
+                    已抽過的號碼列表 
+                    <span id="badgeAllDrawnCount" class="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded-md text-[10px]">0</span>
+                </span>
+                <div class="flex items-center gap-1 bg-slate-900 p-0.5 rounded-lg border border-slate-800">
+                    <button id="sortOrderBtn" class="px-2 py-0.5 text-[10px] rounded bg-slate-800 text-cyan-400 font-semibold transition-all">順序</button>
+                </div>
+            </div>
+            
+            <div id="historyListContainer" class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-2.5 max-h-32 overflow-y-auto flex flex-wrap gap-1.5 content-start text-xs">
+                <span class="text-slate-600 text-[11px] italic w-full text-center py-2">尚無任何抽籤紀錄</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 邏輯程式碼 -->
+    <script>
+        const STORAGE_KEY = 'lottery_drawn_numbers_v1';
+        
+        // DOM 元素
+        const startInput = document.getElementById('startInput');
+        const endInput = document.getElementById('endInput');
+        const statTotal = document.getElementById('statTotal');
+        const statRemaining = document.getElementById('statRemaining');
+        const statHistoryCount = document.getElementById('statHistoryCount');
+        const rangeStatusMsg = document.getElementById('rangeStatusMsg');
+        const rangeStatusText = document.getElementById('rangeStatusText');
+        const resultDisplay = document.getElementById('resultDisplay');
+        const subResultInfo = document.getElementById('subResultInfo');
+        const drawBtn = document.getElementById('drawBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const historyListContainer = document.getElementById('historyListContainer');
+        const badgeAllDrawnCount = document.getElementById('badgeAllDrawnCount');
+        const sortOrderBtn = document.getElementById('sortOrderBtn');
+
+        let sortMode = 'order'; // 'order' 或 'number'
+        let lastDrawnNumber = null;
+
+        // 讀取 localStorage 內的歷史已抽號碼 (Set 結構)
+        function getDrawnSet() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                return data ? new Set(JSON.parse(data)) : new Set();
+            } catch (e) {
+                return new Set();
+            }
         }
 
-        let htmlContent = '';
-        if (folderName) {
-          htmlContent += `<span class="result-folder">資料夾：${folderName}</span>`;
+        // 儲存至 localStorage
+        function saveDrawnSet(setObj) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(setObj)));
         }
-        htmlContent += `<span class="result-filename">檔名：${fileName}</span>`;
 
-        resultLabelEl.innerHTML = htmlContent;
-
-        isDrawing = false;
-        updateUIState();
-
-        if (getAvailableImages().length === 0) {
-          resultLabelEl.innerHTML += '<span style="color: var(--danger); font-size: 0.75rem;">（已全部抽完！）</span>';
+        // 取得當前設定的區間數字陣列
+        function getRangeArray() {
+            let start = parseInt(startInput.value, 10);
+            let end = parseInt(endInput.value, 10);
+            if (isNaN(start) || isNaN(end)) return { start: 0, end: 0, arr: [] };
+            if (start > end) [start, end] = [end, start]; // 自動修正顛倒
+            
+            let arr = [];
+            for (let i = start; i <= end; i++) {
+                arr.push(i);
+            }
+            return { start, end, arr };
         }
-      };
 
-      imgLoader.onerror = () => {
-        showError(`圖片載入失敗，請重試`);
-        isDrawing = false;
-        updateUIState();
-      };
+        // 更新介面狀態與數據
+        function updateUI() {
+            const { start, end, arr } = getRangeArray();
+            const drawnSet = getDrawnSet();
 
-      imgLoader.src = imageUrl;
-    }
+            if (arr.length === 0) {
+                statTotal.textContent = '0';
+                statRemaining.textContent = '0';
+                statHistoryCount.textContent = drawnSet.size;
+                badgeAllDrawnCount.textContent = drawnSet.size;
+                rangeStatusMsg.className = "text-center text-xs font-medium py-1 px-3 rounded-lg bg-rose-950/40 text-rose-400 border border-rose-900/50 flex items-center justify-center gap-1.5";
+                rangeStatusText.textContent = "請輸入有效的數字區間";
+                drawBtn.disabled = true;
+                drawBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                return;
+            }
 
-    function handleReset() {
-      if (!confirm('確定要清除紀錄重新開始嗎？')) return;
+            statTotal.textContent = arr.length;
+            statHistoryCount.textContent = drawnSet.size;
+            badgeAllDrawnCount.textContent = drawnSet.size;
 
-      drawnHistory = [];
-      saveHistory();
+            // 計算目前區間內剩餘可抽數字
+            const remainingArr = arr.filter(num => !drawnSet.has(num));
+            statRemaining.textContent = remainingArr.length;
 
-      resultImgEl.style.display = 'none';
-      resultImgEl.src = '';
-      resultLabelEl.innerHTML = '';
-      placeholderEl.style.display = 'block';
-      placeholderEl.textContent = '紀錄已重置，點擊下方按鈕抽籤';
-      errorMsgEl.style.display = 'none';
+            if (remainingArr.length === 0) {
+                rangeStatusMsg.className = "text-center text-xs font-medium py-1 px-3 rounded-lg bg-amber-950/40 text-amber-400 border border-amber-900/50 flex items-center justify-center gap-1.5";
+                rangeStatusText.textContent = "此區間已無可用數字！請按重置或變更區間";
+                drawBtn.disabled = true;
+                drawBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                resultDisplay.textContent = '完';
+                subResultInfo.textContent = '本區間號碼已全部抽完';
+            } else {
+                rangeStatusMsg.className = "text-center text-xs font-medium py-1 px-3 rounded-lg bg-emerald-950/40 text-emerald-400 border border-emerald-900/50 flex items-center justify-center gap-1.5";
+                rangeStatusText.textContent = `區間內尚有 ${remainingArr.length} 個號碼可抽`;
+                drawBtn.disabled = false;
+                drawBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                if (lastDrawnNumber !== null) {
+                    resultDisplay.textContent = lastDrawnNumber;
+                    subResultInfo.textContent = `上次抽出 (${start} ~ ${end} 區間)`;
+                } else {
+                    resultDisplay.textContent = '?';
+                    subResultInfo.textContent = '準備就緒，點擊下方立即抽籤';
+                }
+            }
 
-      updateUIState();
-    }
+            renderHistoryList(arr, drawnSet);
+        }
 
-    function showError(msg) {
-      errorMsgEl.textContent = msg;
-      errorMsgEl.style.display = 'block';
-    }
+        // 渲染已抽號碼清單
+        function renderHistoryList(rangeArr, drawnSet) {
+            const historyArr = Array.from(drawnSet);
+            if (historyArr.length === 0) {
+                historyListContainer.innerHTML = `<span class="text-slate-600 text-[11px] italic w-full text-center py-2">尚無任何抽籤紀錄</span>`;
+                return;
+            }
 
-    drawBtn.addEventListener('click', handleDraw);
-    resetBtn.addEventListener('click', handleReset);
+            let displayArr = [...historyArr];
+            if (sortMode === 'number') {
+                displayArr.sort((a, b) => a - b);
+            } else {
+                // 依抽出順序 (反轉讓最新抽出的在前面)
+                displayArr.reverse();
+            }
 
-    init();
-  </script>
+            const rangeSet = new Set(rangeArr);
+
+            historyListContainer.innerHTML = displayArr.map(num => {
+                const isInCurrentRange = rangeSet.has(num);
+                const isLatest = num === lastDrawnNumber;
+                
+                let badgeClass = isInCurrentRange 
+                    ? "bg-cyan-950/80 text-cyan-300 border-cyan-800" 
+                    : "bg-slate-900 text-slate-500 border-slate-800";
+                
+                if (isLatest) {
+                    badgeClass += " ring-1 ring-cyan-400 font-bold";
+                }
+
+                return `<span class="px-2 py-1 rounded-lg border text-xs ${badgeClass}">${num}</span>`;
+            }).join('');
+        }
+
+        // 抽籤動作
+        function performDraw() {
+            const { start, end, arr } = getRangeArray();
+            if (arr.length === 0) return;
+
+            const drawnSet = getDrawnSet();
+            const remainingArr = arr.filter(num => !drawnSet.has(num));
+
+            if (remainingArr.length === 0) return;
+
+            // 隨機抽出一項
+            const randomIndex = Math.floor(Math.random() * remainingArr.length);
+            const drawnNum = remainingArr[randomIndex];
+
+            // 動畫跳動特效
+            drawBtn.disabled = true;
+            let counter = 0;
+            const rollInterval = setInterval(() => {
+                const randomDummy = remainingArr[Math.floor(Math.random() * remainingArr.length)];
+                resultDisplay.textContent = randomDummy;
+                counter++;
+                if (counter > 8) {
+                    clearInterval(rollInterval);
+                    resultDisplay.textContent = drawnNum;
+                    lastDrawnNumber = drawnNum;
+                    
+                    // 寫入 localStorage
+                    drawnSet.add(drawnNum);
+                    saveDrawnSet(drawnSet);
+
+                    drawBtn.disabled = false;
+                    updateUI();
+                }
+            }, 45);
+        }
+
+        // 事件監聽
+        drawBtn.addEventListener('click', performDraw);
+
+        startInput.addEventListener('input', updateUI);
+        endInput.addEventListener('input', updateUI);
+
+        sortOrderBtn.addEventListener('click', () => {
+            sortMode = sortMode === 'order' ? 'number' : 'order';
+            sortOrderBtn.textContent = sortMode === 'order' ? '順序' : '數字';
+            sortOrderBtn.className = `px-2 py-0.5 text-[10px] rounded transition-all ${sortMode === 'order' ? 'bg-slate-800 text-cyan-400 font-semibold' : 'bg-slate-800 text-indigo-400 font-semibold'}`;
+            updateUI();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            if (confirm('確定要清除所有跨區間的抽籤紀錄嗎？此動作無法復原。')) {
+                localStorage.removeItem(STORAGE_KEY);
+                lastDrawnNumber = null;
+                resultDisplay.textContent = '?';
+                subResultInfo.textContent = '紀錄已重置';
+                updateUI();
+            }
+        });
+
+        // 初始化
+        updateUI();
+    </script>
 </body>
 </html>
