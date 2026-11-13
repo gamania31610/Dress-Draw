@@ -34,8 +34,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 8px 16px;
+      /* 改為由上方開始排列，並給予極小的頂部間距，消除上方大片空白 */
+      justify-content: flex-start;
+      padding: 6px 16px;
       overflow: hidden; 
     }
 
@@ -48,16 +49,18 @@
       text-align: center;
     }
 
-    /* 美化主標題 */
+    /* 縮減頂部到「隨機抽籤」的距離 */
     h1 {
       font-size: 1.35rem;
       font-weight: 700;
       letter-spacing: 1px;
-      margin-bottom: 8px;
+      margin-top: 2px;
+      /* 加大「隨機抽籤」到下方狀態列的空白 */
+      margin-bottom: 14px;
       color: #ffffff;
     }
 
-    /* 美化狀態列：改為膠囊區塊，使總數、已抽、剩餘層次分明 */
+    /* 狀態列 */
     .status-bar {
       display: flex;
       justify-content: center;
@@ -194,15 +197,20 @@
     }
 
     /* ========================================== */
-    /* PC 電腦螢幕大畫面自動展開 */
+    /* PC 電腦螢幕大畫面自動展開與置中 */
     /* ========================================== */
     @media (min-width: 768px) {
+      body {
+        justify-content: center; /* 電腦版維持完美置中 */
+        padding: 20px;
+      }
       .wrapper {
         max-width: 640px;
       }
       h1 {
         font-size: 1.8rem;
-        margin-bottom: 12px;
+        margin-top: 0;
+        margin-bottom: 18px;
       }
       .status-bar {
         gap: 16px;
