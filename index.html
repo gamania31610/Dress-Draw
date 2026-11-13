@@ -28,37 +28,37 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg);
       color: var(--text);
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 10px 16px;
-      overflow: hidden; /* 鎖死畫面，絕不出現捲軸 */
+      padding: 16px;
     }
 
-    /* 直接使用滿版排版，不加卡片外框 */
     .wrapper {
       width: 100%;
-      max-width: 440px;
+      /* 預設手機版寬度 */
+      max-width: 420px; 
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
+      transition: max-width 0.3s ease;
     }
 
     h1 {
       font-size: 1.25rem;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
 
     .status-bar {
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       color: var(--muted);
-      margin-bottom: 8px;
+      margin-bottom: 12px;
       display: flex;
       justify-content: center;
-      gap: 16px;
+      gap: 18px;
     }
 
     .status-bar span strong {
@@ -67,17 +67,19 @@
 
     .image-box {
       width: 100%;
-      height: 240px; /* 適當高度，確保手機單頁完美顯示 */
+      /* 手機版圖片高度 */
+      height: 240px; 
       background-color: #1e293b;
       border: 2px dashed var(--border);
-      border-radius: 10px;
+      border-radius: 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       overflow: hidden;
       position: relative;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
+      transition: height 0.3s ease;
     }
 
     .image-box img {
@@ -95,29 +97,29 @@
 
     .placeholder-text {
       color: var(--muted);
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       padding: 0 16px;
     }
 
     .result-label {
-      min-height: 42px;
-      font-size: 0.85rem;
+      min-height: 48px;
+      font-size: 0.9rem;
       color: var(--muted);
-      margin-bottom: 10px;
-      line-height: 1.3;
+      margin-bottom: 14px;
+      line-height: 1.4;
       word-break: break-all;
     }
 
     .result-folder {
-      font-size: 1rem;
+      font-size: 1.05rem;
       font-weight: 600;
       color: var(--folder-color);
-      margin-top: 1px;
+      margin-top: 2px;
       display: inline-block;
     }
 
     .result-filename {
-      font-size: 1.15rem;
+      font-size: 1.25rem;
       font-weight: 700;
       color: var(--file-color);
       display: inline-block;
@@ -126,15 +128,15 @@
     .controls {
       width: 100%;
       display: flex;
-      gap: 10px;
+      gap: 12px;
       justify-content: center;
     }
 
     button {
       border: none;
-      border-radius: 8px;
-      padding: 10px 16px;
-      font-size: 0.95rem;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
@@ -160,9 +162,9 @@
       color: var(--danger);
       border: 1px solid var(--border);
       flex: 1;
-      line-height: 1.1;
-      padding: 6px 10px;
-      font-size: 0.85rem;
+      line-height: 1.2;
+      padding: 8px 12px;
+      font-size: 0.9rem;
     }
 
     #resetBtn:hover:not(:disabled) {
@@ -172,9 +174,51 @@
 
     .error-msg {
       color: var(--danger);
-      font-size: 0.8rem;
-      margin-top: 6px;
+      font-size: 0.85rem;
+      margin-top: 8px;
       display: none;
+    }
+
+    /* ========================================== */
+    /* 當螢幕寬度大於 768px（PC 電腦螢幕）時的自動調整 */
+    /* ========================================== */
+    @media (min-width: 768px) {
+      body {
+        overflow: hidden; /* 在 PC 上完美鎖定單頁顯示 */
+      }
+      .wrapper {
+        max-width: 640px; /* PC 上展開更寬敞的版面 */
+      }
+      h1 {
+        font-size: 1.6rem;
+        margin-bottom: 10px;
+      }
+      .status-bar {
+        font-size: 1.05rem;
+        margin-bottom: 16px;
+      }
+      .image-box {
+        height: 420px; /* PC 上的圖片顯示區變得非常大、看得清晰 */
+        margin-bottom: 16px;
+      }
+      .placeholder-text {
+        font-size: 1.1rem;
+      }
+      .result-label {
+        font-size: 1rem;
+        min-height: 56px;
+        margin-bottom: 16px;
+      }
+      .result-folder {
+        font-size: 1.2rem;
+      }
+      .result-filename {
+        font-size: 1.45rem;
+      }
+      button {
+        padding: 14px 24px;
+        font-size: 1.1rem;
+      }
     }
   </style>
 </head>
@@ -349,7 +393,7 @@
         updateUIState();
 
         if (getAvailableImages().length === 0) {
-          resultLabelEl.innerHTML += '<br><span style="color: var(--danger); font-size: 0.8rem;">（已全部抽完！）</span>';
+          resultLabelEl.innerHTML += '<br><span style="color: var(--danger); font-size: 0.9rem;">（已全部抽完！）</span>';
         }
       };
 
