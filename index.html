@@ -32,9 +32,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      /* 改為由上方開始排列，並給予極小的上下間距，徹底消除上方空白 */
-      justify-content: flex-start; 
-      padding: 10px 16px;
+      justify-content: flex-start;
+      /* 將上下內距降到極低，徹底消滅上下空白 */
+      padding: 2px 16px;
       overflow-x: hidden;
     }
 
@@ -48,18 +48,18 @@
     }
 
     h1 {
-      font-size: 1.2rem;
-      margin-top: 4px; /* 緊貼上方 */
-      margin-bottom: 4px;
+      font-size: 1.1rem;
+      margin-top: 2px;
+      margin-bottom: 2px;
     }
 
     .status-bar {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--muted);
-      margin-bottom: 8px;
+      margin-bottom: 4px;
       display: flex;
       justify-content: center;
-      gap: 16px;
+      gap: 14px;
     }
 
     .status-bar span strong {
@@ -68,17 +68,17 @@
 
     .image-box {
       width: 100%;
-      height: 240px; /* 手機上舒適的圖片顯示高度 */
+      height: 230px; /* 手機上適中的圖片高度 */
       background-color: #1e293b;
       border: 2px dashed var(--border);
-      border-radius: 10px;
+      border-radius: 8px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       overflow: hidden;
       position: relative;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
 
     .image-box img {
@@ -96,21 +96,21 @@
 
     .placeholder-text {
       color: var(--muted);
-      font-size: 0.9rem;
-      padding: 0 16px;
+      font-size: 0.85rem;
+      padding: 0 12px;
     }
 
     .result-label {
-      min-height: 42px;
-      font-size: 0.85rem;
+      min-height: 38px;
+      font-size: 0.8rem;
       color: var(--muted);
-      margin-bottom: 10px;
-      line-height: 1.3;
+      margin-bottom: 4px;
+      line-height: 1.25;
       word-break: break-all;
     }
 
     .result-folder {
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 600;
       color: var(--folder-color);
       margin-top: 1px;
@@ -118,7 +118,7 @@
     }
 
     .result-filename {
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       font-weight: 700;
       color: var(--file-color);
       display: inline-block;
@@ -127,15 +127,15 @@
     .controls {
       width: 100%;
       display: flex;
-      gap: 10px;
+      gap: 8px;
       justify-content: center;
     }
 
     button {
       border: none;
       border-radius: 8px;
-      padding: 10px 16px;
-      font-size: 0.95rem;
+      padding: 8px 14px;
+      font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
@@ -162,8 +162,8 @@
       border: 1px solid var(--border);
       flex: 1;
       line-height: 1.1;
-      padding: 6px 10px;
-      font-size: 0.85rem;
+      padding: 4px 8px;
+      font-size: 0.8rem;
     }
 
     #resetBtn:hover:not(:disabled) {
@@ -173,8 +173,8 @@
 
     .error-msg {
       color: var(--danger);
-      font-size: 0.8rem;
-      margin-top: 6px;
+      font-size: 0.75rem;
+      margin-top: 4px;
       display: none;
     }
 
@@ -183,7 +183,7 @@
     /* ========================================== */
     @media (min-width: 768px) {
       body {
-        justify-content: center; /* 電腦版維持置中顯示最好看 */
+        justify-content: center;
         padding: 20px;
       }
       .wrapper {
