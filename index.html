@@ -13,7 +13,6 @@
       --danger: #f87171;
       --danger-hover: #ef4444;
       --bg: #0f172a;
-      --card: #1e293b;
       --text: #f1f5f9;
       --muted: #94a3b8;
       --border: #334155;
@@ -29,37 +28,37 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg);
       color: var(--text);
-      min-height: 100vh;
+      height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 8px; /* 極小化邊距確保不超出一頁 */
+      padding: 10px 16px;
+      overflow: hidden; /* 鎖死畫面，絕不出現捲軸 */
     }
 
-    .container {
-      background: var(--card);
+    /* 直接使用滿版排版，不加卡片外框 */
+    .wrapper {
       width: 100%;
-      max-width: 480px;
-      border-radius: 14px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-      padding: 14px 16px; /* 大幅縮減內部留白 */
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       text-align: center;
-      border: 1px solid var(--border);
     }
 
     h1 {
       font-size: 1.25rem;
-      margin-bottom: 2px;
+      margin-bottom: 4px;
     }
 
     .status-bar {
       font-size: 0.85rem;
       color: var(--muted);
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       display: flex;
       justify-content: center;
-      gap: 14px;
+      gap: 16px;
     }
 
     .status-bar span strong {
@@ -68,8 +67,8 @@
 
     .image-box {
       width: 100%;
-      height: 260px; /* 縮小圖片顯示區高度，適配手機單頁 */
-      background-color: #0f172a;
+      height: 240px; /* 適當高度，確保手機單頁完美顯示 */
+      background-color: #1e293b;
       border: 2px dashed var(--border);
       border-radius: 10px;
       display: flex;
@@ -78,7 +77,7 @@
       justify-content: center;
       overflow: hidden;
       position: relative;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .image-box img {
@@ -86,7 +85,7 @@
       max-height: 100%;
       object-fit: contain;
       display: none;
-      animation: fadeIn 0.35s ease-out;
+      animation: fadeIn 0.3s ease-out;
     }
 
     @keyframes fadeIn {
@@ -101,7 +100,7 @@
     }
 
     .result-label {
-      min-height: 44px;
+      min-height: 42px;
       font-size: 0.85rem;
       color: var(--muted);
       margin-bottom: 10px;
@@ -125,8 +124,9 @@
     }
 
     .controls {
+      width: 100%;
       display: flex;
-      gap: 8px;
+      gap: 10px;
       justify-content: center;
     }
 
@@ -156,12 +156,13 @@
     }
 
     #resetBtn {
-      background-color: #334155;
+      background-color: #1e293b;
       color: var(--danger);
+      border: 1px solid var(--border);
       flex: 1;
       line-height: 1.1;
-      padding: 8px 12px;
-      font-size: 0.9rem;
+      padding: 6px 10px;
+      font-size: 0.85rem;
     }
 
     #resetBtn:hover:not(:disabled) {
@@ -179,7 +180,7 @@
 </head>
 <body>
 
-  <div class="container">
+  <div class="wrapper">
     <h1>隨機抽籤</h1>
     <div class="status-bar">
       <span>總數：<strong id="totalCount">-</strong></span>
