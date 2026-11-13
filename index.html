@@ -388,7 +388,7 @@
         const day = String(now.getDate()).padStart(2, '0');
         const timeString = now.toTimeString().split(' ')[0];
         
-        updateTimeEl.textContent = `最後更新：${year}/${month}/${day}${timeString}`;
+        updateTimeEl.textContent = `最後更新：${year}/${month}/${day}  ${timeString}`;
 
         if (allImages.length === 0) {
           placeholderEl.textContent = `在 ${CONFIG.targetFolder} 找不到圖片`;
