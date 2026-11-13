@@ -329,6 +329,7 @@
     let allImages = [];      
     let drawnHistory = [];   
     let isDrawing = false;
+    let lastActiveTime = Date.now(); // 記錄上次活躍時間
 
     const totalCountEl = document.getElementById('totalCount');
     const drawnCountEl = document.getElementById('drawnCount');
@@ -594,8 +595,21 @@
 
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
-        init();
+        // 當分頁重新變為顯眼/可見時，檢查離開了多久
+        const now = Date.now();
+        // 如果離開超過 2 秒以上再切回來，就強制向 GitHub 重新抓取最新清單
+        if (now - lastActiveTime > 2000) {
+          init();
+        }
+        lastActiveTime = now;
+      } else {
+        lastActiveTime = Date.now();
       }
+    });
+    
+    // 額外增加 window focus 事件，完美覆蓋 iOS Safari 切換分頁或回到瀏覽器的瞬間
+    window.addEventListener('focus', () => {
+      init();
     });
 
     init();
