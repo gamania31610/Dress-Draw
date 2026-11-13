@@ -587,21 +587,43 @@
     drawBtn.addEventListener('click', handleDraw);
 
     // ==========================================
-    // 手機切換分頁或回到 App 時，無條件自動重新整理抓取
+    // 終極防線：透過「頁面可見性」與「點擊觸發」確保切回時必更新
     // ==========================================
-    window.addEventListener('pageshow', () => {
-      init();
-    });
+    
+    let lastCheckTime = Date.now();
 
+    // 1. 當瀏覽器分頁切回來時
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
-        init();
+        const now = Date.now();
+        // 只要切出去超過 1 秒再回來，就立刻強制重整
+        if (now - lastCheckTime > 1000) {
+          init();
+        }
+        lastCheckTime = now;
+      } else {
+        lastCheckTime = Date.now();
       }
     });
 
+    // 2. 當 App 重新取得焦點時
     window.addEventListener('focus', () => {
-      init();
+      const now = Date.now();
+      if (now - lastCheckTime > 1000) {
+        init();
+      }
+      lastCheckTime = now;
     });
+
+    // 3. 最強保險：手機用戶只要一「點擊」螢幕或按鈕，立刻檢查是否需要更新
+    document.addEventListener('pointerdown', () => {
+      const now = Date.now();
+      // 如果超過 10 秒沒有跟網頁互動（代表可能剛切回 App），點擊的瞬間自動背景更新一次清單
+      if (now - lastCheckTime > 10000) {
+        init();
+      }
+      lastCheckTime = now;
+    }, { passive: true });
 
     init();
   </script>
