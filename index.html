@@ -32,49 +32,51 @@
       height: 100vh;
       height: 100dvh;
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      /* 改為由上方開始排列，並給予極小的頂部間距，消除上方大片空白 */
-      justify-content: flex-start;
-      padding: 6px 16px;
+      justify-content: center;
+      padding: 10px 16px;
       overflow: hidden; 
     }
 
     .wrapper {
       width: 100%;
       max-width: 420px;
+      height: 100%;
+      display: grid;
+      grid-template-rows: 1fr auto 1fr;
+      justify-items: center;
+    }
+
+    /* 區塊 1：標題與狀態列 */
+    .section-top {
+      width: 100%;
+      align-self: start;
       display: flex;
       flex-direction: column;
       align-items: center;
-      text-align: center;
+      padding: 4px;
     }
 
-    /* 縮減頂部到「隨機抽籤」的距離 */
     h1 {
-      font-size: 1.35rem;
+      font-size: 2rem;
       font-weight: 700;
       letter-spacing: 1px;
-      margin-top: 2px;
-      /* 加大「隨機抽籤」到下方狀態列的空白 */
-      margin-bottom: 14px;
+      margin-bottom: 30px;
       color: #ffffff;
     }
 
-    /* 狀態列 */
     .status-bar {
       display: flex;
       justify-content: center;
       gap: 10px;
-      margin-bottom: 12px;
       width: 100%;
     }
 
     .status-badge {
       background-color: var(--card-bg);
       border: 1px solid var(--border);
-      padding: 4px 10px;
+      padding: 3px 8px;
       border-radius: 20px;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       color: var(--muted);
     }
 
@@ -84,9 +86,20 @@
       margin-left: 2px;
     }
 
+    /* 區塊 2：圖片與結果顯示區 */
+    .section-middle {
+      width: 100%;
+      align-self: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+    }
+
     .image-box {
       width: 100%;
-      height: 210px;
+      height: 190px;
       background-color: var(--card-bg);
       border: 2px dashed var(--border);
       border-radius: 12px;
@@ -96,7 +109,7 @@
       justify-content: center;
       overflow: hidden;
       position: relative;
-      margin-bottom: 10px;
+      margin-bottom: 6px;
     }
 
     .image-box img {
@@ -119,27 +132,47 @@
     }
 
     .result-label {
-      min-height: 40px;
-      font-size: 0.85rem;
+      min-height: 54px; 
+      max-height: 54px;
+      overflow: hidden;
+      font-size: 0.8rem;
       color: var(--muted);
-      margin-bottom: 10px;
-      line-height: 1.35;
+      line-height: 1.3;
       word-break: break-all;
+      width: 100%;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .result-folder,
+    .result-filename {
+      font-size: 1.05rem;
+      font-weight: 700;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .result-folder {
-      font-size: 1rem;
-      font-weight: 600;
       color: var(--folder-color);
-      margin-top: 1px;
-      display: inline-block;
     }
 
     .result-filename {
-      font-size: 1.15rem;
-      font-weight: 700;
       color: var(--file-color);
-      display: inline-block;
+    }
+
+    /* 區塊 3：按鈕控制區 */
+    .section-bottom {
+      width: 100%;
+      align-self: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
     }
 
     .controls {
@@ -197,46 +230,41 @@
     }
 
     /* ========================================== */
-    /* PC 電腦螢幕大畫面自動展開與置中 */
+    /* PC 電腦螢幕大畫面自動展開 */
     /* ========================================== */
     @media (min-width: 768px) {
       body {
-        justify-content: center; /* 電腦版維持完美置中 */
-        padding: 20px;
+        padding: 24px;
       }
       .wrapper {
         max-width: 640px;
       }
       h1 {
-        font-size: 1.8rem;
-        margin-top: 0;
-        margin-bottom: 18px;
+        font-size: 3rem;
+        margin-bottom: 30px;
       }
       .status-bar {
         gap: 16px;
-        margin-bottom: 16px;
       }
       .status-badge {
         font-size: 1rem;
         padding: 6px 16px;
       }
       .image-box {
-        height: 380px;
-        margin-bottom: 16px;
+        height: 360px;
+        margin-bottom: 12px;
       }
       .placeholder-text {
         font-size: 1.1rem;
       }
       .result-label {
+        min-height: 72px;
+        max-height: 72px;
         font-size: 1rem;
-        min-height: 56px;
-        margin-bottom: 16px;
       }
-      .result-folder {
-        font-size: 1.2rem;
-      }
+      .result-folder,
       .result-filename {
-        font-size: 1.45rem;
+        font-size: 1.35rem;
       }
       button {
         padding: 14px 24px;
@@ -248,26 +276,33 @@
 <body>
 
   <div class="wrapper">
-    <h1>隨機抽籤</h1>
-    <div class="status-bar">
-      <span class="status-badge">總數：<strong id="totalCount">-</strong></span>
-      <span class="status-badge">已抽：<strong id="drawnCount">-</strong></span>
-      <span class="status-badge">剩餘：<strong id="remainCount">-</strong></span>
+    <!-- 區塊 1：標題與狀態列 -->
+    <div class="section-top">
+      <h1>隨機抽籤</h1>
+      <div class="status-bar">
+        <span class="status-badge">總數：<strong id="totalCount">-</strong></span>
+        <span class="status-badge">已抽：<strong id="drawnCount">-</strong></span>
+        <span class="status-badge">剩餘：<strong id="remainCount">-</strong></span>
+      </div>
     </div>
 
-    <div class="image-box">
-      <div class="placeholder-text" id="placeholder">正在從 GitHub 載入圖片清單...</div>
-      <img id="resultImg" alt="抽籤結果">
+    <!-- 區塊 2：圖片與結果顯示區 -->
+    <div class="section-middle">
+      <div class="image-box">
+        <div class="placeholder-text" id="placeholder">正在從 GitHub 載入圖片清單...</div>
+        <img id="resultImg" alt="抽籤結果">
+      </div>
+      <div class="result-label" id="resultLabel"></div>
     </div>
 
-    <div class="result-label" id="resultLabel"></div>
-
-    <div class="controls">
-      <button id="drawBtn" disabled>抽籤</button>
-      <button id="resetBtn" disabled>RESET<br>重置</button>
+    <!-- 區塊 3：按鈕控制區 -->
+    <div class="section-bottom">
+      <div class="controls">
+        <button id="drawBtn" disabled>抽籤</button>
+        <button id="resetBtn" disabled>RESET<br>重置</button>
+      </div>
+      <div class="error-msg" id="errorMsg"></div>
     </div>
-
-    <div class="error-msg" id="errorMsg"></div>
   </div>
 
   <script>
@@ -404,11 +439,11 @@
           fileName = relativePath.substring(lastSlashIndex + 1);
         }
 
-        let htmlContent = `抽出結果：<br>`;
+        let htmlContent = '';
         if (folderName) {
-          htmlContent += `資料夾：<span class="result-folder">${folderName}</span><br>`;
+          htmlContent += `<span class="result-folder">資料夾：${folderName}</span>`;
         }
-        htmlContent += `檔名：<span class="result-filename">${fileName}</span>`;
+        htmlContent += `<span class="result-filename">檔名：${fileName}</span>`;
 
         resultLabelEl.innerHTML = htmlContent;
 
@@ -416,7 +451,7 @@
         updateUIState();
 
         if (getAvailableImages().length === 0) {
-          resultLabelEl.innerHTML += '<br><span style="color: var(--danger); font-size: 0.8rem;">（已全部抽完！）</span>';
+          resultLabelEl.innerHTML += '<span style="color: var(--danger); font-size: 0.75rem;">（已全部抽完！）</span>';
         }
       };
 
