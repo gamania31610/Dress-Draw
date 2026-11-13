@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>隨機抽籤系統</title>
   <style>
     :root {
@@ -28,19 +28,20 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg);
       color: var(--text);
-      min-height: 100vh;
+      /* 強制鎖死剛好一個視窗高度，絕對不超過一頁、不出捲軸 */
+      height: 100vh;
+      height: 100dvh; /* 適配手機瀏覽器動態網址列 */
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      /* 將上下內距降到極低，徹底消滅上下空白 */
-      padding: 2px 16px;
-      overflow-x: hidden;
+      justify-content: center; /* 完美垂直置中 */
+      padding: 8px 16px;
+      overflow: hidden; 
     }
 
     .wrapper {
       width: 100%;
-      max-width: 420px;
+      max-width: 400px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -48,15 +49,14 @@
     }
 
     h1 {
-      font-size: 1.1rem;
-      margin-top: 2px;
-      margin-bottom: 2px;
+      font-size: 1.15rem;
+      margin-bottom: 4px;
     }
 
     .status-bar {
       font-size: 0.8rem;
       color: var(--muted);
-      margin-bottom: 4px;
+      margin-bottom: 8px;
       display: flex;
       justify-content: center;
       gap: 14px;
@@ -68,17 +68,17 @@
 
     .image-box {
       width: 100%;
-      height: 230px; /* 手機上適中的圖片高度 */
+      height: 210px; /* 手機上精準的高度，確保垂直置中時上下空間完美平衡 */
       background-color: #1e293b;
       border: 2px dashed var(--border);
-      border-radius: 8px;
+      border-radius: 10px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       overflow: hidden;
       position: relative;
-      margin-bottom: 4px;
+      margin-bottom: 8px;
     }
 
     .image-box img {
@@ -104,8 +104,8 @@
       min-height: 38px;
       font-size: 0.8rem;
       color: var(--muted);
-      margin-bottom: 4px;
-      line-height: 1.25;
+      margin-bottom: 8px;
+      line-height: 1.3;
       word-break: break-all;
     }
 
@@ -134,7 +134,7 @@
     button {
       border: none;
       border-radius: 8px;
-      padding: 8px 14px;
+      padding: 8px 12px;
       font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
@@ -162,8 +162,8 @@
       border: 1px solid var(--border);
       flex: 1;
       line-height: 1.1;
-      padding: 4px 8px;
-      font-size: 0.8rem;
+      padding: 6px 10px;
+      font-size: 0.85rem;
     }
 
     #resetBtn:hover:not(:disabled) {
@@ -182,23 +182,19 @@
     /* PC 電腦螢幕大畫面自動展開 */
     /* ========================================== */
     @media (min-width: 768px) {
-      body {
-        justify-content: center;
-        padding: 20px;
-      }
       .wrapper {
         max-width: 640px;
       }
       h1 {
         font-size: 1.6rem;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
       }
       .status-bar {
         font-size: 1.05rem;
         margin-bottom: 16px;
       }
       .image-box {
-        height: 420px;
+        height: 400px;
         margin-bottom: 16px;
       }
       .placeholder-text {
