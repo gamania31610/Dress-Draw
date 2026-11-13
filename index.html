@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>隨機抽籤系統</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: var(--card);
+      width: 100%;
+      max-width: 560px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+      padding: 28px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+    }
+
+    .status-bar {
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .status-bar span strong {
+      color: var(--text);
+    }
+
+    .image-box {
+      width: 100%;
+      height: 380px;
+      background-color: #f1f5f9;
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .image-box img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: none;
+      animation: fadeIn 0.35s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .placeholder-text {
+      color: var(--muted);
+      font-size: 1rem;
+      padding: 0 20px;
+    }
+
+    .result-label {
+      min-height: 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 20px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #drawBtn {
+      background-color: var(--primary);
+      color: white;
+      flex: 2;
+    }
+
+    #drawBtn:hover:not(:disabled) {
+      background-color: var(--primary-hover);
+    }
+
+    #resetBtn {
+      background-color: #fee2e2;
+      color: var(--danger);
+      flex: 1;
+    }
+
+    #resetBtn:hover:not(:disabled) {
+      background-color: var(--danger);
+      color: white;
+    }
+
+    .error-msg {
+      color: var(--danger);
+      font-size: 0.875rem;
+      margin-top: 12px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>隨機抽籤</h1>
+    <div class="status-bar">
+      <span>總數：<strong id="totalCount">-</strong></span>
+      <span>已抽：<strong id="drawnCount">-</strong></span>
+      <span>剩餘：<strong id="remainCount">-</strong></span>
+    </div>
+
+    <div class="image-box">
+      <div class="placeholder-text" id="placeholder">正在從 GitHub 載入圖片清單...</div>
+      <img id="resultImg" alt="抽籤結果">
+    </div>
+
+    <div class="result-label" id="resultLabel"></div>
+
+    <div class="controls">
+      <button id="drawBtn" disabled>抽籤</button>
+      <button id="resetBtn" disabled>Reset 重置</button>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <script>
+    // ================= 設定區 =================
+    const CONFIG = {
+      owner: 'gamania31610',
+      repo: 'Dress-Draw',
+      targetFolder: 'images/', // 必須以斜線結尾
+      storageKey: 'dress_draw_history_v1',
+      allowedExtensions: ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+    };
+    // ==========================================
+
+    let allImages = [];      // GitHub 上所有的圖片路徑
+    let drawnHistory = [];   // localStorage 中已抽過的圖片路徑
+    let isDrawing = false;
+
+    const totalCountEl = document.getElementById('totalCount');
+    const drawnCountEl = document.getElementById('drawnCount');
+    const remainCountEl = document.getElementById('remainCount');
+    const placeholderEl = document.getElementById('placeholder');
+    const resultImgEl = document.getElementById('resultImg');
+    const resultLabelEl = document.getElementById('resultLabel');
+    const drawBtn = document.getElementById('drawBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const errorMsgEl = document.getElementById('errorMsg');
+
+    // 初始化
+    async function init() {
+      loadHistory();
+      try {
+        await fetchRepoImages();
+        updateUIState();
+        if (allImages.length === 0) {
+          placeholderEl.textContent = `在 ${CONFIG.targetFolder} 找不到任何圖片檔案`;
+        } else if (getAvailableImages().length === 0) {
+          placeholderEl.textContent = '所有圖片都已經抽完囉！請點擊 Reset 重新開始。';
+        } else {
+          placeholderEl.textContent = '準備就緒，點擊下方按鈕開始抽籤';
+        }
+      } catch (err) {
+        showError(`載入失敗：${err.message}`);
+        placeholderEl.textContent = '無法載入圖片清單';
+      }
+    }
+
+    // 讀取 localStorage 紀錄
+    function loadHistory() {
+      try {
+        const saved = localStorage.getItem(CONFIG.storageKey);
+        drawnHistory = saved ? JSON.parse(saved) : [];
+      } catch (e) {
+        drawnHistory = [];
+      }
+    }
+
+    // 儲存紀錄至 localStorage
+    function saveHistory() {
+      localStorage.setItem(CONFIG.storageKey, JSON.stringify(drawnHistory));
+    }
+
+    // 透過 GitHub API 取得預設分支與完整檔案樹
+    async function fetchRepoImages() {
+      // 1. 取得預設分支名稱 (main 或 master)
+      const repoRes = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}`);
+      if (!repoRes.ok) {
+        if (repoRes.status === 403) throw new Error('GitHub API 請求次數達上限，請稍後再試');
+        if (repoRes.status === 404) throw new Error('找不到儲存庫，請確認 Repo 是否已設為 Public');
+        throw new Error(`HTTP ${repoRes.status}`);
+      }
+      const repoData = await repoRes.json();
+      const defaultBranch = repoData.default_branch;
+
+      // 2. 遞迴取得所有檔案結構
+      const treeRes = await fetch(
+        `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/git/trees/${defaultBranch}?recursive=1`
+      );
+      if (!treeRes.ok) throw new Error(`無法讀取目錄結構 (HTTP ${treeRes.status})`);
+      const treeData = await treeRes.json();
+
+      // 3. 篩選位於 images/ 底下且符合圖片副檔名的檔案
+      allImages = treeData.tree
+        .filter(item => {
+          if (item.type !== 'blob') return false;
+          if (!item.path.startsWith(CONFIG.targetFolder)) return false;
+          const lowerPath = item.path.toLowerCase();
+          return CONFIG.allowedExtensions.some(ext => lowerPath.endsWith(ext));
+        })
+        .map(item => item.path);
+
+      // 清理紀錄：若 GitHub 上已刪除某些圖片，順便從歷史紀錄移除以保持計數準確
+      const validSet = new Set(allImages);
+      drawnHistory = drawnHistory.filter(path => validSet.has(path));
+      saveHistory();
+    }
+
+    // 計算目前還未抽過的圖片池
+    function getAvailableImages() {
+      const drawnSet = new Set(drawnHistory);
+      return allImages.filter(path => !drawnSet.has(path));
+    }
+
+    // 更新畫面數字與按鈕狀態
+    function updateUIState() {
+      const available = getAvailableImages();
+      totalCountEl.textContent = allImages.length;
+      drawnCountEl.textContent = drawnHistory.length;
+      remainCountEl.textContent = available.length;
+
+      drawBtn.disabled = available.length === 0 || isDrawing;
+      resetBtn.disabled = drawnHistory.length === 0 || isDrawing;
+    }
+
+    // 執行抽籤
+    function handleDraw() {
+      const available = getAvailableImages();
+      if (available.length === 0 || isDrawing) return;
+
+      isDrawing = true;
+      updateUIState();
+      errorMsgEl.style.display = 'none';
+
+      // 使用較隨機的索引抽取
+      const randomIndex = Math.floor(Math.random() * available.length);
+      const selectedPath = available[randomIndex];
+
+      // 組合 GitHub Raw 圖片網址 (處理資料夾或檔名含空白/中文的編碼)
+      const encodedPath = selectedPath.split('/').map(encodeURIComponent).join('/');
+      const imageUrl = `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/HEAD/${encodedPath}`;
+
+      // 預載圖片確保順暢顯示
+      const imgLoader = new Image();
+      imgLoader.onload = () => {
+        // 紀錄已抽出並寫入 localStorage
+        drawnHistory.push(selectedPath);
+        saveHistory();
+
+        // 顯示圖片與路徑資訊 (移除開頭的 images/)
+        placeholderEl.style.display = 'none';
+        resultImgEl.style.display = 'none';
+        void resultImgEl.offsetWidth; // 觸發重繪讓動畫重新播放
+        resultImgEl.src = imageUrl;
+        resultImgEl.style.display = 'block';
+
+        const displayName = selectedPath.replace(CONFIG.targetFolder, '');
+        resultLabelEl.textContent = `抽出結果：${displayName}`;
+
+        isDrawing = false;
+        updateUIState();
+
+        if (getAvailableImages().length === 0) {
+          resultLabelEl.textContent += '（已全部抽完！）';
+        }
+      };
+
+      imgLoader.onerror = () => {
+        showError(`圖片載入失敗：${selectedPath}，請重試一次`);
+        isDrawing = false;
+        updateUIState();
+      };
+
+      imgLoader.src = imageUrl;
+    }
+
+    // 重置抽籤紀錄
+    function handleReset() {
+      if (!confirm('確定要清除所有已抽紀錄，重新開始嗎？')) return;
+
+      drawnHistory = [];
+      saveHistory();
+
+      resultImgEl.style.display = 'none';
+      resultImgEl.src = '';
+      resultLabelEl.textContent = '';
+      placeholderEl.style.display = 'block';
+      placeholderEl.textContent = '紀錄已重置，點擊下方按鈕開始抽籤';
+      errorMsgEl.style.display = 'none';
+
+      updateUIState();
+    }
+
+    function showError(msg) {
+      errorMsgEl.textContent = msg;
+      errorMsgEl.style.display = 'block';
+    }
+
+    drawBtn.addEventListener('click', handleDraw);
+    resetBtn.addEventListener('click', handleReset);
+
+    init();
+  </script>
+</body>
+</html>
